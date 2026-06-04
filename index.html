@@ -1,0 +1,1571 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#ffffff">
+<meta name="description" content="ProjectFlow — Multi-project management tracker">
+<title>ProjectFlow</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ─── Reset & Base ─────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --sans: 'DM Sans', system-ui, sans-serif;
+  --mono: 'DM Mono', monospace;
+
+  --bg:        #f7f7f5;
+  --surface:   #ffffff;
+  --surface2:  #f2f1ef;
+  --border:    rgba(0,0,0,.09);
+  --border-md: rgba(0,0,0,.14);
+
+  --text:      #1a1916;
+  --text2:     #6b6a66;
+  --text3:     #a09f9a;
+
+  --accent:    #1a6ef5;
+  --accent-bg: #eaf1ff;
+  --green:     #13875c;
+  --green-bg:  #e4f5ee;
+  --red:       #c0392b;
+  --red-bg:    #fdecea;
+  --amber:     #92530a;
+  --amber-bg:  #fef4e4;
+  --purple:    #5b3eb5;
+  --purple-bg: #eeeafc;
+
+  --radius-sm: 6px;
+  --radius:    10px;
+  --radius-lg: 14px;
+  --radius-xl: 20px;
+
+  --topbar-h:  54px;
+  --bnav-h:    64px;
+  --shadow:    0 1px 3px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04);
+  --shadow-md: 0 4px 16px rgba(0,0,0,.10), 0 1px 4px rgba(0,0,0,.06);
+}
+
+html { font-size: 15px; -webkit-text-size-adjust: 100%; }
+body {
+  font-family: var(--sans);
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.5;
+  min-height: 100dvh;
+  overscroll-behavior: none;
+}
+
+/* ─── Scrollbar ─────────────────────────────────────────── */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border-md); border-radius: 99px; }
+
+/* ─── App shell ─────────────────────────────────────────── */
+#app { display: flex; flex-direction: column; min-height: 100dvh; }
+
+/* ─── Topbar ─────────────────────────────────────────────── */
+.topbar {
+  position: sticky; top: 0; z-index: 50;
+  height: var(--topbar-h);
+  background: rgba(255,255,255,.92);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 14px;
+  gap: 10px;
+}
+.topbar-left { display: flex; align-items: center; gap: 6px; min-width: 0; flex: 1; }
+.topbar-right { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+
+.brand { display: flex; align-items: center; gap: 7px; cursor: pointer; flex-shrink: 0; }
+.brand-icon { width: 30px; height: 30px; background: var(--text); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; }
+.brand-name { font-size: 15px; font-weight: 600; letter-spacing: -.3px; }
+
+.breadcrumb {
+  display: flex; align-items: center; gap: 5px;
+  font-size: 13px; color: var(--text2);
+  min-width: 0; overflow: hidden;
+}
+.breadcrumb .crumb { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 180px; }
+.breadcrumb .crumb.link { color: var(--accent); cursor: pointer; }
+.breadcrumb .sep { color: var(--text3); flex-shrink: 0; }
+
+/* ─── Buttons ────────────────────────────────────────────── */
+.btn {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 7px 13px;
+  border: 1px solid var(--border-md);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--text);
+  font: 500 13px/1 var(--sans);
+  cursor: pointer; white-space: nowrap;
+  transition: background .12s, transform .08s;
+  -webkit-tap-highlight-color: transparent;
+}
+.btn:hover { background: var(--surface2); }
+.btn:active { transform: scale(.97); }
+.btn.primary {
+  background: var(--text); color: white; border-color: var(--text);
+}
+.btn.primary:hover { background: #2c2b28; }
+.btn.accent { background: var(--accent); color: white; border-color: var(--accent); }
+.btn.accent:hover { background: #155dd4; }
+.btn.ai { background: var(--purple-bg); color: var(--purple); border-color: #c5b8f7; }
+.btn.sm { padding: 5px 10px; font-size: 12px; border-radius: var(--radius-sm); }
+.btn.icon-only { padding: 7px; }
+.btn.danger { color: var(--red); border-color: #f5c0bc; }
+.btn.danger:hover { background: var(--red-bg); }
+.btn:disabled { opacity: .45; cursor: not-allowed; transform: none; }
+
+.icon-btn {
+  width: 36px; height: 36px;
+  display: flex; align-items: center; justify-content: center;
+  border: none; background: transparent; cursor: pointer; color: var(--text);
+  border-radius: var(--radius); -webkit-tap-highlight-color: transparent;
+}
+.icon-btn:hover { background: var(--surface2); }
+
+/* ─── Main ───────────────────────────────────────────────── */
+.main {
+  flex: 1;
+  padding: 16px;
+  padding-bottom: calc(16px + env(safe-area-inset-bottom));
+}
+.main.has-bnav { padding-bottom: calc(var(--bnav-h) + 16px + env(safe-area-inset-bottom)); }
+
+/* ─── Dashboard ──────────────────────────────────────────── */
+.dash-header { margin-bottom: 16px; }
+.dash-title { font-size: 22px; font-weight: 600; letter-spacing: -.4px; margin-bottom: 2px; }
+.dash-sub { font-size: 13px; color: var(--text2); }
+
+.projects-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; }
+
+.project-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 16px;
+  cursor: pointer;
+  transition: box-shadow .15s, transform .1s, border-color .15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.project-card:hover { box-shadow: var(--shadow-md); border-color: var(--border-md); }
+.project-card:active { transform: scale(.99); }
+.pc-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
+.pc-title { font-size: 15px; font-weight: 600; line-height: 1.3; }
+.pc-sub { font-size: 12px; color: var(--text2); margin-bottom: 12px; }
+.pc-foot { display: flex; align-items: center; justify-content: space-between; }
+.pc-date { font-size: 11px; color: var(--text3); }
+.progress-bar { height: 4px; background: var(--surface2); border-radius: 99px; overflow: hidden; margin-top: 10px; }
+.progress-bar .fill { height: 100%; background: var(--green); border-radius: 99px; transition: width .3s; }
+
+.empty-state {
+  text-align: center; padding: 60px 24px;
+  color: var(--text2);
+}
+.empty-state .es-icon { font-size: 40px; margin-bottom: 12px; opacity: .35; }
+.empty-state h3 { font-size: 17px; font-weight: 600; color: var(--text); margin-bottom: 6px; }
+.empty-state p { font-size: 13px; margin-bottom: 20px; }
+
+/* ─── Badge ──────────────────────────────────────────────── */
+.badge {
+  display: inline-flex; align-items: center;
+  padding: 3px 8px; border-radius: 99px;
+  font-size: 11px; font-weight: 500; white-space: nowrap;
+}
+.badge.request    { background: var(--accent-bg);  color: var(--accent); }
+.badge.planning   { background: var(--purple-bg);  color: var(--purple); }
+.badge.scheduling { background: var(--amber-bg);   color: var(--amber); }
+.badge.tracking   { background: var(--green-bg);   color: var(--green); }
+.badge.procurement{ background: #feeee4;            color: #c2511a; }
+.badge.issues     { background: var(--red-bg);     color: var(--red); }
+.badge.change     { background: #fce9f5;            color: #9c2d8b; }
+.badge.documents  { background: var(--green-bg);   color: var(--green); }
+.badge.closing    { background: var(--surface2);   color: var(--text2); }
+.badge.done       { background: var(--green-bg);   color: var(--green); }
+.badge.active     { background: var(--accent-bg);  color: var(--accent); }
+.badge.overdue    { background: var(--red-bg);     color: var(--red); }
+.badge.pending    { background: var(--surface2);   color: var(--text2); }
+
+/* ─── Project view ───────────────────────────────────────── */
+.project-view { display: flex; flex-direction: column; gap: 0; }
+
+/* Tab bar (desktop) */
+.tab-bar {
+  display: flex; gap: 2px;
+  overflow-x: auto; -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 20px;
+  padding-bottom: 0;
+}
+.tab-bar::-webkit-scrollbar { display: none; }
+.tab-btn {
+  display: flex; align-items: center; gap: 5px;
+  padding: 9px 13px;
+  border: none; border-bottom: 2px solid transparent;
+  background: none; font: 500 13px var(--sans);
+  color: var(--text2); cursor: pointer; white-space: nowrap;
+  -webkit-tap-highlight-color: transparent;
+  transition: color .12s;
+  margin-bottom: -1px;
+}
+.tab-btn:hover { color: var(--text); }
+.tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+.tab-btn svg { flex-shrink: 0; }
+
+/* ─── Bottom Nav (mobile) ───────────────────────────────── */
+.bottom-nav {
+  position: fixed; bottom: 0; left: 0; right: 0; z-index: 50;
+  height: calc(var(--bnav-h) + env(safe-area-inset-bottom));
+  padding-bottom: env(safe-area-inset-bottom);
+  background: rgba(255,255,255,.95);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-top: 1px solid var(--border);
+  display: flex; align-items: stretch;
+}
+.bnav-item {
+  flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 3px; border: none; background: none; cursor: pointer;
+  color: var(--text3); font: 500 10px var(--sans);
+  -webkit-tap-highlight-color: transparent;
+  transition: color .12s;
+  padding: 0;
+}
+.bnav-item.active { color: var(--accent); }
+.bnav-item svg { flex-shrink: 0; }
+
+/* More menu */
+.more-menu {
+  position: fixed; bottom: 0; left: 0; right: 0; z-index: 200;
+  background: rgba(0,0,0,.4);
+  top: 0;
+}
+.more-menu-inner {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  background: var(--surface);
+  border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+  padding: 8px 16px;
+  padding-bottom: calc(20px + env(safe-area-inset-bottom));
+}
+.more-menu-handle {
+  width: 36px; height: 4px; background: var(--border-md); border-radius: 99px;
+  margin: 8px auto 16px;
+}
+.more-menu-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 14px 4px; border: none; background: none;
+  width: 100%; text-align: left; cursor: pointer;
+  font: 500 15px var(--sans); color: var(--text);
+  border-bottom: 1px solid var(--border);
+  -webkit-tap-highlight-color: transparent;
+}
+.more-menu-item:last-child { border-bottom: none; }
+.more-menu-item.active { color: var(--accent); }
+.more-menu-item .mmi-icon {
+  width: 36px; height: 36px; border-radius: var(--radius);
+  display: flex; align-items: center; justify-content: center;
+  background: var(--surface2); flex-shrink: 0;
+}
+
+/* ─── Section ────────────────────────────────────────────── */
+.section { margin-bottom: 28px; }
+.section-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 12px; gap: 8px;
+}
+.section-title {
+  font-size: 11px; font-weight: 600; color: var(--text2);
+  text-transform: uppercase; letter-spacing: .07em;
+}
+
+/* ─── Cards ──────────────────────────────────────────────── */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+/* ─── Form ───────────────────────────────────────────────── */
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.form-grid .full { grid-column: 1 / -1; }
+.field { display: flex; flex-direction: column; gap: 4px; }
+.field label { font-size: 11px; font-weight: 500; color: var(--text2); text-transform: uppercase; letter-spacing: .05em; }
+.field input, .field select, .field textarea {
+  width: 100%; padding: 9px 11px;
+  border: 1px solid var(--border-md);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--text); font: 400 14px var(--sans);
+  appearance: none; -webkit-appearance: none;
+  transition: border-color .12s, box-shadow .12s;
+}
+.field input:focus, .field select:focus, .field textarea:focus {
+  outline: none; border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(26,110,245,.12);
+}
+.field textarea { resize: vertical; min-height: 72px; }
+.field select { background-image: url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236b6a66' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 10px center; padding-right: 28px; }
+
+/* ─── Table ──────────────────────────────────────────────── */
+.table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.table-wrap table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 500px; }
+.table-wrap th {
+  padding: 9px 10px; text-align: left;
+  font-size: 11px; font-weight: 600; color: var(--text2);
+  background: var(--surface2); border-bottom: 1px solid var(--border);
+  text-transform: uppercase; letter-spacing: .04em; white-space: nowrap;
+}
+.table-wrap td {
+  padding: 9px 10px; border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+}
+.table-wrap tr:last-child td { border-bottom: none; }
+.table-wrap tr:hover td { background: var(--surface2); }
+.inline-input {
+  width: 100%; border: none; background: transparent;
+  font: 400 13px var(--sans); color: var(--text);
+  padding: 0; outline: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.inline-input:focus { color: var(--text); }
+.inline-select {
+  border: none; background: transparent;
+  font: 400 13px var(--sans); color: var(--text);
+  padding: 0; outline: none; cursor: pointer;
+  appearance: none; -webkit-appearance: none;
+  width: 100%;
+}
+
+/* ─── Metrics ─────────────────────────────────────────────── */
+.metric-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 10px; margin-bottom: 20px; }
+.metric {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px 14px;
+}
+.metric .m-label { font-size: 11px; color: var(--text2); margin-bottom: 5px; font-weight: 500; }
+.metric .m-value { font-size: 21px; font-weight: 600; letter-spacing: -.5px; line-height: 1; }
+.metric .m-sub { font-size: 11px; color: var(--text3); margin-top: 3px; }
+
+/* ─── Doc checklist ──────────────────────────────────────── */
+.doc-list { display: flex; flex-direction: column; }
+.doc-item {
+  display: flex; align-items: flex-start; gap: 12px;
+  padding: 13px 16px; border-bottom: 1px solid var(--border);
+}
+.doc-item:last-child { border-bottom: none; }
+.doc-checkbox { width: 18px; height: 18px; flex-shrink: 0; margin-top: 1px; accent-color: var(--green); cursor: pointer; }
+.doc-info { flex: 1; min-width: 0; }
+.doc-name { font-size: 14px; font-weight: 500; }
+.doc-name.checked { text-decoration: line-through; color: var(--text3); }
+.doc-meta { font-size: 12px; color: var(--text2); margin-top: 2px; }
+.doc-actions { display: flex; gap: 6px; align-items: center; flex-shrink: 0; }
+
+/* ─── Modal ──────────────────────────────────────────────── */
+.modal-bg {
+  position: fixed; inset: 0; z-index: 100;
+  background: rgba(0,0,0,.4);
+  backdrop-filter: blur(2px);
+}
+.modal-wrap {
+  position: fixed; inset: 0; z-index: 101;
+  display: flex; align-items: flex-end; justify-content: center;
+  pointer-events: none;
+  padding: 16px;
+}
+.modal {
+  background: var(--surface);
+  border-radius: var(--radius-xl);
+  padding: 20px;
+  width: 100%; max-width: 560px; max-height: 88vh;
+  overflow-y: auto; pointer-events: all;
+  box-shadow: var(--shadow-md);
+  -webkit-overflow-scrolling: touch;
+}
+.modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; }
+.modal-header h2 { font-size: 17px; font-weight: 600; }
+
+@media (min-width: 640px) {
+  .modal-wrap { align-items: center; }
+  .modal { border-radius: var(--radius-xl); }
+}
+
+/* ─── Upload zone ────────────────────────────────────────── */
+.upload-zone {
+  border: 1.5px dashed var(--border-md);
+  border-radius: var(--radius-lg);
+  padding: 32px 20px; text-align: center;
+  cursor: pointer;
+  background: var(--surface2);
+  transition: border-color .15s, background .15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.upload-zone:hover, .upload-zone.drag { border-color: var(--accent); background: var(--accent-bg); }
+.upload-zone svg { color: var(--text3); margin-bottom: 10px; }
+.upload-zone p { font-size: 14px; color: var(--text2); }
+.upload-zone .uz-hint { font-size: 12px; color: var(--text3); margin-top: 4px; }
+
+/* ─── AI banner ──────────────────────────────────────────── */
+.ai-banner {
+  display: flex; align-items: center; gap: 10px;
+  padding: 12px 14px; background: var(--purple-bg);
+  border-radius: var(--radius); margin-bottom: 14px;
+  font-size: 13px; color: var(--purple);
+}
+.spinner {
+  width: 18px; height: 18px; border-radius: 50%;
+  border: 2px solid #c5b8f7; border-top-color: var(--purple);
+  animation: spin .7s linear infinite; flex-shrink: 0;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ─── Preview field ──────────────────────────────────────── */
+.fp-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 14px; max-height: 250px; overflow-y: auto; }
+.fp-item { background: var(--surface2); border-radius: var(--radius); padding: 9px 11px; }
+.fp-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: var(--text3); margin-bottom: 3px; }
+.fp-value { font-size: 13px; color: var(--text); }
+.fp-value.empty { color: var(--text3); font-style: italic; }
+
+/* ─── Checkbox rows ──────────────────────────────────────── */
+.check-row { display: flex; align-items: center; gap: 9px; padding: 8px 0; font-size: 14px; border-bottom: 1px solid var(--border); }
+.check-row:last-child { border-bottom: none; }
+.check-row input[type=checkbox] { width: 16px; height: 16px; accent-color: var(--accent); flex-shrink: 0; }
+.check-row label { cursor: pointer; line-height: 1.4; }
+
+/* ─── Inline date ────────────────────────────────────────── */
+.inline-date {
+  border: none; background: transparent;
+  font: 400 12px var(--sans); color: var(--text);
+  padding: 0; outline: none; width: 100%;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* ─── Phase selector ─────────────────────────────────────── */
+.phase-select {
+  padding: 6px 28px 6px 10px;
+  border: 1px solid var(--border-md);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--text); font: 500 13px var(--sans);
+  cursor: pointer; appearance: none; -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236b6a66' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 8px center;
+}
+
+/* ─── Responsive ─────────────────────────────────────────── */
+@media (max-width: 640px) {
+  .main { padding: 12px; }
+  .form-grid { grid-template-columns: 1fr; }
+  .form-grid .full { grid-column: 1; }
+  .projects-grid { grid-template-columns: 1fr; }
+  .tab-bar { display: none; }
+  .metric-grid { grid-template-columns: repeat(2, 1fr); }
+  .fp-grid { grid-template-columns: 1fr; }
+  .topbar { padding: 0 10px; }
+  .btn.hide-mobile { display: none; }
+  .dash-title { font-size: 20px; }
+}
+
+@media (min-width: 641px) {
+  .bottom-nav { display: none !important; }
+  .main.has-bnav { padding-bottom: 16px; }
+}
+
+/* ─── Utilities ──────────────────────────────────────────── */
+.flex { display: flex; }
+.items-center { align-items: center; }
+.justify-between { justify-content: space-between; }
+.gap-2 { gap: 8px; }
+.gap-1 { gap: 6px; }
+.mt-1 { margin-top: 6px; }
+.mt-2 { margin-top: 12px; }
+.text-sm { font-size: 13px; }
+.text-xs { font-size: 11px; }
+.text-muted { color: var(--text2); }
+.text-green { color: var(--green); }
+.text-red { color: var(--red); }
+.text-amber { color: var(--amber); }
+.fw-500 { font-weight: 500; }
+.fw-600 { font-weight: 600; }
+.empty-row td { text-align: center; color: var(--text3); font-size: 12px; padding: 20px; }
+
+/* ─── Proc table specific ─────────────────────────────────── */
+.order-by-cell { color: var(--accent); font-weight: 600; font-size: 12px; }
+
+/* ─── Issue status dot ───────────────────────────────────── */
+.status-wrap { display: flex; align-items: center; gap: 5px; }
+.status-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+.status-dot.open { background: var(--red); }
+.status-dot.progress { background: var(--amber); }
+.status-dot.closed { background: var(--green); }
+
+/* ─── Animations ─────────────────────────────────────────── */
+@keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+.fade-in { animation: fadeIn .18s ease; }
+
+/* ─── Print (hide nav) ───────────────────────────────────── */
+@media print {
+  .topbar, .bottom-nav, .tab-bar, .btn, .icon-btn { display: none !important; }
+  .main { padding: 0; }
+}
+
+</style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+</head>
+<body>
+
+<div id="app">
+  <header class="topbar" id="topbar">
+    <div class="topbar-left">
+      <button class="icon-btn" id="back-btn" onclick="handleBack()" style="display:none" aria-label="Back">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M12 4l-6 6 6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+      <div class="brand" id="brand" onclick="goHome()">
+        <div class="brand-icon">
+          <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="2" y="2" width="6" height="6" rx="1.5" fill="currentColor"/><rect x="10" y="2" width="6" height="6" rx="1.5" fill="currentColor" opacity=".5"/><rect x="2" y="10" width="6" height="6" rx="1.5" fill="currentColor" opacity=".5"/><rect x="10" y="10" width="6" height="6" rx="1.5" fill="currentColor"/></svg>
+        </div>
+        <span class="brand-name">ProjectFlow</span>
+      </div>
+      <div class="breadcrumb" id="breadcrumb"></div>
+    </div>
+    <div class="topbar-right" id="topbar-actions"></div>
+  </header>
+
+  <main class="main" id="main-content"></main>
+
+  <nav class="bottom-nav" id="bottom-nav" style="display:none">
+    <button class="bnav-item active" id="bnav-request" onclick="switchTab('request')">
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="4" y="3" width="12" height="14" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="M7 7h6M7 10h6M7 13h4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+      <span>Request</span>
+    </button>
+    <button class="bnav-item" id="bnav-tracking" onclick="switchTab('tracking')">
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M3 14l4-4 3 3 4-5 3 2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><rect x="3" y="3" width="14" height="14" rx="2" stroke="currentColor" stroke-width="1.6"/></svg>
+      <span>Budget</span>
+    </button>
+    <button class="bnav-item" id="bnav-issues" onclick="switchTab('issues')">
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M10 3L17 16H3L10 3Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M10 9v3M10 14v.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+      <span>Issues</span>
+    </button>
+    <button class="bnav-item" id="bnav-documents" onclick="switchTab('documents')">
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M5 3h7l4 4v10a1 1 0 01-1 1H5a1 1 0 01-1-1V4a1 1 0 011-1z" stroke="currentColor" stroke-width="1.6"/><path d="M12 3v4h4M7 10h6M7 13h4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+      <span>Docs</span>
+    </button>
+    <button class="bnav-item" id="bnav-more" onclick="openMoreMenu()">
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="5" r="1.2" fill="currentColor"/><circle cx="10" cy="10" r="1.2" fill="currentColor"/><circle cx="10" cy="15" r="1.2" fill="currentColor"/></svg>
+      <span>More</span>
+    </button>
+  </nav>
+</div>
+
+<div class="modal-bg" id="modal-bg" onclick="closeModal()" style="display:none"></div>
+<div class="modal-wrap" id="modal-wrap" style="display:none">
+  <div class="modal" id="modal-inner"></div>
+</div>
+
+<div class="more-menu" id="more-menu" style="display:none">
+  <div class="more-menu-inner" id="more-menu-inner"></div>
+</div>
+
+<script>
+// ─── Constants ──────────────────────────────────────────────
+const PHASES = ['request','planning','scheduling','tracking','procurement','issues','change','documents','closing'];
+const PHASE_LABELS = {request:'Request',planning:'Planning',scheduling:'Scheduling',tracking:'Budget & Costs',procurement:'Procurement',issues:'Issues',change:'Change Mgmt',documents:'Documents',closing:'Closing'};
+const PHASE_ICONS_SVG = {
+  request: `<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="2" y="1" width="10" height="12" rx="1.5" stroke="currentColor" stroke-width="1.4"/><path d="M4.5 5h5M4.5 7.5h5M4.5 10h3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>`,
+  planning: `<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 4h10M2 7h10M2 10h6" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>`,
+  scheduling: `<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="2" y="3" width="10" height="9" rx="1.5" stroke="currentColor" stroke-width="1.4"/><path d="M5 2v2M9 2v2M2 6h10" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>`,
+  tracking: `<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 10l3-3 2.5 2.5L11 5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+  procurement: `<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="2" y="6" width="10" height="6" rx="1" stroke="currentColor" stroke-width="1.4"/><path d="M5 6V4.5a2 2 0 014 0V6" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>`,
+  issues: `<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 2l5.5 10H1.5L7 2z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/><path d="M7 6v3M7 10.5v.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>`,
+  change: `<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 7a5 5 0 015-5c1.5 0 2.8.66 3.75 1.7M12 7a5 5 0 01-5 5 5.02 5.02 0 01-3.75-1.7" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><path d="M10.5 3l1.5-.7.3 1.7M3.5 11l-1.5.7-.3-1.7" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+  documents: `<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 2h5.5L11 4.5V12a1 1 0 01-1 1H3a1 1 0 01-1-1V3a1 1 0 011-1z" stroke="currentColor" stroke-width="1.4"/><path d="M8 2v3h3M4.5 7h5M4.5 9.5h3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>`,
+  closing: `<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7l3 3 5-5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>`
+};
+const ROLES = ['Project Manager','Team Lead','Project Engineer','IT Engineer','Operations Manager','Project Director'];
+
+// ─── Supabase ────────────────────────────────────────────────
+const SUPABASE_URL = 'https://vuxsxqjgtrldqrqoumwb.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ1eHN4cWpndHJsZHFycW91bXdiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg2NTMzMjIsImV4cCI6MjA5NDIyOTMyMn0.RnxrCXzTeXp3zXyBJt3-t6JQbp3dPTdQbkqqp_NKEvI';
+const db = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+function getDeviceId() {
+  let id = localStorage.getItem('pf_device_id');
+  if (!id) { id = crypto.randomUUID(); localStorage.setItem('pf_device_id', id); }
+  return id;
+}
+
+// ─── State ───────────────────────────────────────────────────
+let state = { projects: [], activeProjectId: null, activeTab: 'request' };
+
+async function loadState() {
+  try {
+    const ui = localStorage.getItem('pf_ui_v1');
+    if (ui) { const s = JSON.parse(ui); state.activeProjectId = s.activeProjectId || null; state.activeTab = s.activeTab || 'request'; }
+  } catch(e) {}
+  document.getElementById('main-content').innerHTML = '<div style="text-align:center;padding:60px;color:var(--text3)">Loading…</div>';
+  const { data, error } = await db.from('pf_projects').select('id, data').eq('user_id', getDeviceId()).order('updated_at', { ascending: false });
+  if (!error && data) state.projects = data.map(r => r.data).filter(Boolean);
+  render();
+}
+
+function saveUIState() {
+  try { localStorage.setItem('pf_ui_v1', JSON.stringify({ activeProjectId: state.activeProjectId, activeTab: state.activeTab })); } catch(e) {}
+}
+
+const _saveTimers = new Map();
+function saveState() {
+  saveUIState();
+  const p = getProject(state.activeProjectId);
+  if (!p) return;
+  if (_saveTimers.has(p.id)) clearTimeout(_saveTimers.get(p.id));
+  _saveTimers.set(p.id, setTimeout(() => {
+    _saveTimers.delete(p.id);
+    db.from('pf_projects').upsert({ id: p.id, user_id: getDeviceId(), data: p, updated_at: new Date().toISOString() });
+  }, 600));
+}
+
+async function saveProjectNow(p) {
+  await db.from('pf_projects').upsert({ id: p.id, user_id: getDeviceId(), data: p, updated_at: new Date().toISOString() });
+}
+
+function getProject(id) { return state.projects.find(p => p.id === id); }
+function newId() { return Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
+function today() { return new Date().toISOString().slice(0,10); }
+function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function fmt(n) { return Number(n||0).toLocaleString('en-SG', {minimumFractionDigits:0, maximumFractionDigits:0}); }
+function isMobile() { return window.innerWidth <= 640; }
+
+// ─── Routing/Render ───────────────────────────────────────────
+function render() {
+  if (state.activeProjectId) renderProjectView();
+  else renderDashboard();
+}
+
+function goHome() {
+  state.activeProjectId = null;
+  saveUIState();
+  renderDashboard();
+}
+
+function handleBack() {
+  if (state.activeProjectId) goHome();
+}
+
+// ─── Dashboard ────────────────────────────────────────────────
+function renderDashboard() {
+  state.activeProjectId = null;
+
+  // topbar
+  document.getElementById('back-btn').style.display = 'none';
+  document.getElementById('brand').style.display = 'flex';
+  document.getElementById('breadcrumb').innerHTML = '';
+  document.getElementById('topbar-actions').innerHTML = `
+    <button class="btn" onclick="openImportModal()">
+      <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><path d="M7.5 1v9M4 6.5l3.5 3.5L11 6.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M2 11v2h11v-2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      <span class="hide-mobile">Import</span>
+    </button>
+    <button class="btn primary" onclick="openNewProjectModal()">
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 2v10M2 7h10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      New project
+    </button>`;
+
+  document.getElementById('bottom-nav').style.display = 'none';
+  document.getElementById('main-content').className = 'main fade-in';
+
+  if (!state.projects.length) {
+    document.getElementById('main-content').innerHTML = `
+      <div class="empty-state">
+        <div class="es-icon">📋</div>
+        <h3>No projects yet</h3>
+        <p>Create your first project manually or import from a Word document.</p>
+        <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+          <button class="btn" onclick="openImportModal()">
+            <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><path d="M7.5 1v9M4 6.5l3.5 3.5L11 6.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M2 11v2h11v-2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+            Import from Word
+          </button>
+          <button class="btn primary" onclick="openNewProjectModal()">New project</button>
+        </div>
+      </div>`;
+    return;
+  }
+
+  const cards = state.projects.map(p => `
+    <div class="project-card" onclick="openProject('${p.id}')">
+      <div class="pc-head">
+        <div class="pc-title">${esc(p.title||'Untitled')}</div>
+        <span class="badge ${p.phase}">${PHASE_LABELS[p.phase]}</span>
+      </div>
+      <div class="pc-sub">${esc(p.institution||'—')}${p.po ? ' · ' + esc(p.po) : ''}</div>
+      <div class="pc-foot">
+        <span style="font-size:11px;color:var(--text3)">${p.date||''}</span>
+        <span style="font-size:11px;color:var(--text2)">${phaseProgress(p)}% complete</span>
+      </div>
+      <div class="progress-bar"><div class="fill" style="width:${phaseProgress(p)}%"></div></div>
+    </div>`).join('');
+
+  document.getElementById('main-content').innerHTML = `
+    <div class="dash-header">
+      <div class="dash-title">Projects</div>
+      <div class="dash-sub">${state.projects.length} project${state.projects.length!==1?'s':''}</div>
+    </div>
+    <div class="projects-grid">${cards}</div>`;
+}
+
+function phaseProgress(p) {
+  return Math.round(((PHASES.indexOf(p.phase)+1)/PHASES.length)*100);
+}
+
+// ─── Project View ─────────────────────────────────────────────
+function openProject(id) {
+  state.activeProjectId = id;
+  state.activeTab = 'request';
+  saveUIState();
+  renderProjectView();
+}
+
+function renderProjectView() {
+  const p = getProject(state.activeProjectId);
+  if (!p) { goHome(); return; }
+
+  // topbar
+  document.getElementById('back-btn').style.display = 'flex';
+  document.getElementById('brand').style.display = isMobile() ? 'none' : 'flex';
+  document.getElementById('breadcrumb').innerHTML = `
+    <span class="sep">›</span>
+    <span class="crumb" title="${esc(p.title)}">${esc(p.title)}</span>`;
+
+  document.getElementById('topbar-actions').innerHTML = `
+    <button class="btn sm ai hide-mobile" onclick="openImportIntoProject('${p.id}')">
+      <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M6.5 1.5l1.2 3.7h3.8l-3 2.2 1.1 3.7-3.1-2.3-3.1 2.3 1.1-3.7-3-2.2h3.8z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/></svg>
+      Import Word
+    </button>
+    <select class="phase-select" onchange="changePhase(this.value)">
+      ${PHASES.map(ph=>`<option value="${ph}" ${ph===p.phase?'selected':''}>${PHASE_LABELS[ph]}</option>`).join('')}
+    </select>
+    <button class="icon-btn" onclick="openProjectMenu('${p.id}')" aria-label="More options">
+      <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="4.5" r="1.2" fill="currentColor"/><circle cx="9" cy="9" r="1.2" fill="currentColor"/><circle cx="9" cy="13.5" r="1.2" fill="currentColor"/></svg>
+    </button>`;
+
+  // tab bar (desktop)
+  const tabBar = PHASES.map(ph => `
+    <button class="tab-btn ${state.activeTab===ph?'active':''}" onclick="switchTab('${ph}')">
+      ${PHASE_ICONS_SVG[ph]} ${PHASE_LABELS[ph]}
+    </button>`).join('');
+
+  // bottom nav (mobile)
+  const bnav = document.getElementById('bottom-nav');
+  bnav.style.display = '';
+  document.getElementById('main-content').className = 'main has-bnav fade-in';
+  updateBottomNav();
+
+  document.getElementById('main-content').innerHTML = `
+    <div class="project-view">
+      <div class="tab-bar">${tabBar}</div>
+      <div id="tab-content"></div>
+    </div>`;
+  renderTab();
+}
+
+function updateBottomNav() {
+  const mainTabs = ['request','tracking','issues','documents'];
+  mainTabs.forEach(t => {
+    const el = document.getElementById(`bnav-${t}`);
+    if (el) el.classList.toggle('active', state.activeTab === t);
+  });
+  const moreActive = !mainTabs.includes(state.activeTab);
+  document.getElementById('bnav-more')?.classList.toggle('active', moreActive);
+}
+
+function switchTab(tab) {
+  state.activeTab = tab;
+  updateBottomNav();
+  // Update desktop tabs
+  document.querySelectorAll('.tab-btn').forEach(b => {
+    b.classList.toggle('active', b.textContent.trim().includes(PHASE_LABELS[tab]));
+  });
+  const tc = document.getElementById('tab-content');
+  if (tc) { tc.innerHTML = getTabContent(); tc.classList.add('fade-in'); }
+}
+
+function openMoreMenu() {
+  const mm = document.getElementById('more-menu');
+  const inner = document.getElementById('more-menu-inner');
+  const moreTabs = ['planning','scheduling','procurement','change','closing'];
+  inner.innerHTML = `
+    <div class="more-menu-handle"></div>
+    ${moreTabs.map(ph=>`
+      <button class="more-menu-item ${state.activeTab===ph?'active':''}" onclick="switchTab('${ph}');closeMoreMenu()">
+        <div class="mmi-icon">${PHASE_ICONS_SVG[ph]}</div>
+        ${PHASE_LABELS[ph]}
+      </button>`).join('')}
+    <button class="more-menu-item" style="color:var(--red)" onclick="closeMoreMenu();openImportIntoProject('${state.activeProjectId}')">
+      <div class="mmi-icon"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 1v8M4 5l3 4 3-4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/><path d="M2 10v2h10v-2" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg></div>
+      Import from Word
+    </button>`;
+  mm.style.display = 'block';
+  mm.addEventListener('click', e => { if (e.target===mm) closeMoreMenu(); }, {once:true});
+}
+function closeMoreMenu() { document.getElementById('more-menu').style.display = 'none'; }
+
+function renderTab() {
+  const tc = document.getElementById('tab-content');
+  if (!tc) return;
+  tc.innerHTML = getTabContent();
+}
+
+function getTabContent() {
+  const p = getProject(state.activeProjectId);
+  if (!p) return '';
+  const t = state.activeTab;
+  if (t==='request')    return renderRequest(p);
+  if (t==='planning')   return renderPlanning(p);
+  if (t==='scheduling') return renderScheduling(p);
+  if (t==='tracking')   return renderTracking(p);
+  if (t==='procurement')return renderProcurement(p);
+  if (t==='issues')     return renderIssues(p);
+  if (t==='change')     return renderChange(p);
+  if (t==='documents')  return renderDocuments(p);
+  if (t==='closing')    return renderClosing(p);
+  return '';
+}
+
+function changePhase(ph) {
+  const p = getProject(state.activeProjectId);
+  if (!p) return;
+  p.phase = ph; saveState();
+}
+
+function openProjectMenu(id) {
+  const p = getProject(id);
+  if (!p) return;
+  showModal(`
+    <div class="modal-header"><h2>Project options</h2><button class="icon-btn" onclick="closeModal()"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button></div>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <button class="btn" onclick="closeModal();openImportIntoProject('${id}')">
+        <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><path d="M7.5 1v9M4 6.5l3.5 3.5L11 6.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M2 11v2h11v-2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        Import from Word document
+      </button>
+      <button class="btn danger" onclick="closeModal();deleteProject('${id}')">
+        <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><path d="M3 5h9M6 5V3h3v2M6 8v4M9 8v4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><rect x="2" y="5" width="11" height="8" rx="1.5" stroke="currentColor" stroke-width="1.4"/></svg>
+        Delete project
+      </button>
+    </div>`);
+}
+
+function deleteProject(id) {
+  if (!confirm('Delete this project? This cannot be undone.')) return;
+  state.projects = state.projects.filter(p => p.id !== id);
+  state.activeProjectId = null;
+  db.from('pf_projects').delete().eq('id', id).eq('user_id', getDeviceId());
+  saveUIState(); renderDashboard();
+}
+
+// ─── Tab renderers ────────────────────────────────────────────
+
+function renderRequest(p) {
+  const r = p.request;
+  return `
+  <div class="section">
+    <div class="section-header">
+      <span class="section-title">Project overview</span>
+      <button class="btn sm ai" onclick="openImportIntoProject('${p.id}')">
+        <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M6.5 1.5l1.2 3.7h3.8l-3 2.2 1.1 3.7-3.1-2.3-3.1 2.3 1.1-3.7-3-2.2h3.8z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/></svg>
+        Import Word
+      </button>
+    </div>
+    <div class="card" style="padding:16px">
+      <div class="form-grid">
+        <div class="field"><label>PO #</label><input value="${esc(p.po||'')}" onchange="setField('po',this.value)" placeholder="e.g. PO-2025-001"></div>
+        <div class="field"><label>Date</label><input type="date" value="${esc(p.date||'')}" onchange="setField('date',this.value)"></div>
+        <div class="field full"><label>Project title</label><input value="${esc(p.title||'')}" onchange="setField('title',this.value)"></div>
+        <div class="field"><label>Institution</label><input value="${esc(p.institution||'')}" onchange="setField('institution',this.value)"></div>
+        <div class="field"><label>Sales manager</label><input value="${esc(p.salesManager||'')}" onchange="setField('salesManager',this.value)"></div>
+        <div class="field full"><label>Background</label><textarea onchange="setReqField('background',this.value)">${esc(r.background||'')}</textarea></div>
+        <div class="field full"><label>Objectives</label><textarea onchange="setReqField('objectives',this.value)">${esc(r.objectives||'')}</textarea></div>
+        <div class="field full"><label>Business case</label><textarea onchange="setReqField('businessCase',this.value)">${esc(r.businessCase||'')}</textarea></div>
+        <div class="field"><label>Sales revenue (SGD)</label><input type="number" value="${p.salesRevenue||''}" onchange="setField('salesRevenue',parseFloat(this.value)||0)"></div>
+        <div class="field"><label>Projected schedule</label><input value="${esc(r.projectedSchedule||'')}" onchange="setReqField('projectedSchedule',this.value)"></div>
+      </div>
+    </div>
+  </div>
+  <div class="section">
+    <div class="section-header">
+      <span class="section-title">Products / deliverables</span>
+      <button class="btn sm" onclick="addProduct()">+ Add</button>
+    </div>
+    <div class="card table-wrap">
+      <table><thead><tr><th>Description</th><th style="width:70px">Qty</th><th>Remarks</th><th style="width:36px"></th></tr></thead>
+      <tbody id="products-body">${renderProductsRows(p)}</tbody></table>
+    </div>
+  </div>
+  <div class="section">
+    <div class="section-header">
+      <span class="section-title">Milestones</span>
+      <button class="btn sm" onclick="addMilestone()">+ Add</button>
+    </div>
+    <div class="card table-wrap">
+      <table><thead><tr><th>Description</th><th style="width:120px">Date</th><th>Remarks</th><th style="width:36px"></th></tr></thead>
+      <tbody id="milestones-body">${renderMilestonesRows(p)}</tbody></table>
+    </div>
+  </div>
+  <div class="section">
+    <div class="section-header">
+      <span class="section-title">Success criteria (KPI)</span>
+      <button class="btn sm" onclick="addKpi()">+ Add</button>
+    </div>
+    <div class="card table-wrap">
+      <table><thead><tr><th>Description</th><th>Method</th><th>Threshold</th><th style="width:36px"></th></tr></thead>
+      <tbody id="kpis-body">${renderKpisRows(p)}</tbody></table>
+    </div>
+  </div>
+  <div class="section">
+    <div class="section-header">
+      <span class="section-title">Stakeholders</span>
+      <button class="btn sm" onclick="addStakeholder()">+ Add</button>
+    </div>
+    <div class="card table-wrap">
+      <table><thead><tr><th>Institution</th><th>Role</th><th>Name(s)</th><th style="width:36px"></th></tr></thead>
+      <tbody id="stakeholders-body">${renderStakeholderRows(p)}</tbody></table>
+    </div>
+  </div>`;
+}
+
+function iRow(val, onchange, ph='') { return `<input class="inline-input" value="${esc(val||'')}" onchange="${onchange}" placeholder="${ph}">`; }
+function iDate(val, onchange) { return `<input class="inline-date" type="date" value="${esc(val||'')}" onchange="${onchange}">`; }
+function iSel(opts, val, onchange) { return `<select class="inline-select" onchange="${onchange}">${opts.map(o=>`<option ${o===val?'selected':''}>${o}</option>`).join('')}</select>`; }
+function delBtn(fn) { return `<button class="btn sm danger icon-only" onclick="${fn}"><svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M3 3l7 7M10 3l-7 7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></button>`; }
+function emptyTr(cols, msg) { return `<tr class="empty-row"><td colspan="${cols}">${msg}</td></tr>`; }
+
+function renderProductsRows(p) { return (p.request.products||[]).map((x,i)=>`<tr><td>${iRow(x.desc,`updateProduct(${i},'desc',this.value)`)}</td><td>${iRow(x.qty,`updateProduct(${i},'qty',this.value)`)}</td><td>${iRow(x.remarks,`updateProduct(${i},'remarks',this.value)`)}</td><td>${delBtn(`removeProduct(${i})`)}</td></tr>`).join('')||emptyTr(4,'No products added'); }
+function renderMilestonesRows(p) { return (p.request.milestones||[]).map((x,i)=>`<tr><td>${iRow(x.desc,`updateMilestone(${i},'desc',this.value)`)}</td><td>${iDate(x.date,`updateMilestone(${i},'date',this.value)`)}</td><td>${iRow(x.remarks,`updateMilestone(${i},'remarks',this.value)`)}</td><td>${delBtn(`removeMilestone(${i})`)}</td></tr>`).join('')||emptyTr(4,'No milestones added'); }
+function renderKpisRows(p) { return (p.request.kpis||[]).map((x,i)=>`<tr><td>${iRow(x.desc,`updateKpi(${i},'desc',this.value)`)}</td><td>${iRow(x.method,`updateKpi(${i},'method',this.value)`)}</td><td>${iRow(x.threshold,`updateKpi(${i},'threshold',this.value)`)}</td><td>${delBtn(`removeKpi(${i})`)}</td></tr>`).join('')||emptyTr(4,'No KPIs added'); }
+function renderStakeholderRows(p) { return (p.request.stakeholders||[]).map((x,i)=>`<tr><td>${iRow(x.inst,`updateStakeholder(${i},'inst',this.value)`)}</td><td>${iRow(x.role,`updateStakeholder(${i},'role',this.value)`)}</td><td>${iRow(x.names,`updateStakeholder(${i},'names',this.value)`)}</td><td>${delBtn(`removeStakeholder(${i})`)}</td></tr>`).join('')||emptyTr(4,'No stakeholders added'); }
+
+function renderPlanning(p) {
+  const pl = p.planning;
+  return `
+  <div class="section">
+    <div class="section-header"><span class="section-title">Project team</span><button class="btn sm" onclick="addTeamMember()">+ Add</button></div>
+    <div class="card table-wrap"><table><thead><tr><th>Role</th><th>Name</th><th>Remarks</th><th style="width:36px"></th></tr></thead>
+    <tbody>${(pl.teamMembers||[]).map((x,i)=>`<tr><td>${iSel(ROLES,x.role,`updateTeamMember(${i},'role',this.value)`)}</td><td>${iRow(x.name,`updateTeamMember(${i},'name',this.value)`)}</td><td>${iRow(x.remarks,`updateTeamMember(${i},'remarks',this.value)`)}</td><td>${delBtn(`removeTeamMember(${i})`)}</td></tr>`).join('')||emptyTr(4,'No team members')}</tbody></table></div>
+  </div>
+  <div class="section">
+    <div class="section-header"><span class="section-title">Scope</span><button class="btn sm" onclick="addScopeItem()">+ Add</button></div>
+    <div class="card table-wrap"><table><thead><tr><th style="width:70px">In/Out</th><th>Description</th><th>Remarks</th><th style="width:36px"></th></tr></thead>
+    <tbody>${(pl.scope||[]).map((x,i)=>`<tr><td>${iSel(['In','Out'],x.inout,`updateScope(${i},'inout',this.value)`)}</td><td>${iRow(x.desc,`updateScope(${i},'desc',this.value)`)}</td><td>${iRow(x.remarks,`updateScope(${i},'remarks',this.value)`)}</td><td>${delBtn(`removeScope(${i})`)}</td></tr>`).join('')||emptyTr(4,'No scope items')}</tbody></table></div>
+  </div>
+  <div class="section">
+    <div class="section-header"><span class="section-title">Risks &amp; mitigation</span><button class="btn sm" onclick="addRisk()">+ Add</button></div>
+    <div class="card table-wrap"><table><thead><tr><th style="width:100px">Type</th><th>Risk</th><th>Mitigation</th><th style="width:36px"></th></tr></thead>
+    <tbody>${(pl.risks||[]).map((x,i)=>`<tr><td>${iRow(x.type,`updateRisk(${i},'type',this.value)`)}</td><td>${iRow(x.risk,`updateRisk(${i},'risk',this.value)`)}</td><td>${iRow(x.mitigation,`updateRisk(${i},'mitigation',this.value)`)}</td><td>${delBtn(`removeRisk(${i})`)}</td></tr>`).join('')||emptyTr(4,'No risks added')}</tbody></table></div>
+  </div>`;
+}
+
+function renderScheduling(p) {
+  const acts = p.scheduling.activities||[];
+  return `
+  <div class="section">
+    <div class="section-header"><span class="section-title">Activity schedule</span><button class="btn sm" onclick="addActivity()">+ Add</button></div>
+    <div class="card table-wrap"><table><thead><tr><th style="width:28px">#</th><th>Activity</th><th style="width:108px">Start</th><th style="width:108px">End</th><th style="width:72px">Days</th><th style="width:100px">Status</th><th style="width:36px"></th></tr></thead>
+    <tbody>${acts.map((x,i)=>`<tr>
+      <td style="color:var(--text3);font-size:12px">${i+1}</td>
+      <td>${iRow(x.name,`updateActivity(${i},'name',this.value)`)}</td>
+      <td>${iDate(x.start,`updateActivity(${i},'start',this.value)`)}</td>
+      <td>${iDate(x.end,`updateActivity(${i},'end',this.value)`)}</td>
+      <td style="font-size:12px;color:var(--text2)">${calcWorkDays(x.start,x.end)}</td>
+      <td>${iSel(['Not started','In progress','Completed','Delayed'],x.status,`updateActivity(${i},'status',this.value)`)}</td>
+      <td>${delBtn(`removeActivity(${i})`)}</td>
+    </tr>`).join('')||emptyTr(7,'No activities added')}</tbody></table></div>
+  </div>`;
+}
+
+function calcWorkDays(s,e) {
+  if(!s||!e) return '—';
+  let d1=new Date(s),d2=new Date(e),c=0;
+  while(d1<=d2){if(d1.getDay()!==0&&d1.getDay()!==6)c++;d1.setDate(d1.getDate()+1);}
+  return c;
+}
+
+function renderTracking(p) {
+  const budget=p.tracking.budgetItems||[];
+  const actual=p.tracking.actualItems||[];
+  const mhEst=p.tracking.manhoursEst||[];
+  const mhAct=p.tracking.manhoursAct||[];
+  const totalB=budget.reduce((s,x)=>s+(parseFloat(x.budgeted)||0),0);
+  const totalA=actual.reduce((s,x)=>s+(parseFloat(x.actual)||0),0);
+  const vari=totalB-totalA;
+  const totalMhE=mhEst.reduce((s,x)=>s+(parseFloat(x.cost)||0),0);
+  const totalMhA=mhAct.reduce((s,x)=>s+(parseFloat(x.cost)||0),0);
+  return `
+  <div class="metric-grid">
+    <div class="metric"><div class="m-label">Total budget</div><div class="m-value">$${fmt(totalB)}</div></div>
+    <div class="metric"><div class="m-label">Total actual</div><div class="m-value">$${fmt(totalA)}</div></div>
+    <div class="metric"><div class="m-label">Variance</div><div class="m-value ${vari>=0?'text-green':'text-red'}">${vari>=0?'+':''}$${fmt(vari)}</div></div>
+    <div class="metric"><div class="m-label">Manhours budget</div><div class="m-value">$${fmt(totalMhE)}</div></div>
+    <div class="metric"><div class="m-label">Manhours actual</div><div class="m-value ${totalMhE-totalMhA>=0?'text-green':'text-red'}">$${fmt(totalMhA)}</div></div>
+  </div>
+  <div class="section">
+    <div class="section-header"><span class="section-title">Budget items</span><button class="btn sm" onclick="addBudgetItem()">+ Add</button></div>
+    <div class="card table-wrap"><table><thead><tr><th>Item</th><th style="width:120px">Budgeted</th><th style="width:120px">Actual</th><th style="width:100px">Variance</th><th style="width:36px"></th></tr></thead>
+    <tbody>${budget.map((x,i)=>{const ac=parseFloat((actual[i]||{}).actual)||0;const bud=parseFloat(x.budgeted)||0;const v=bud-ac;return`<tr>
+      <td>${iRow(x.item,`updateBudgetItem(${i},'item',this.value)`)}</td>
+      <td><input class="inline-input" type="number" value="${x.budgeted||''}" onchange="updateBudgetItem(${i},'budgeted',this.value)"></td>
+      <td><input class="inline-input" type="number" value="${x.actual||''}" onchange="updateBudgetActual(${i},this.value)"></td>
+      <td class="${v>=0?'text-green':'text-red'}" style="font-size:12px;font-weight:500">${v>=0?'+':''}$${fmt(v)}</td>
+      <td>${delBtn(`removeBudgetItem(${i})`)}</td>
+    </tr>`}).join('')||emptyTr(5,'No budget items')}</tbody></table></div>
+  </div>
+  <div class="section">
+    <div class="section-header"><span class="section-title">Manhours — estimated vs actual</span><button class="btn sm" onclick="addManhoursRow()">+ Add</button></div>
+    <div class="card table-wrap"><table><thead><tr><th>Activity</th><th>Role</th><th style="width:45px">Qty</th><th style="width:65px">Rate</th><th style="width:50px">FTE</th><th style="width:90px">Est. cost</th><th style="width:90px">Act. cost</th><th style="width:80px">Variance</th><th style="width:36px"></th></tr></thead>
+    <tbody>${mhEst.map((x,i)=>{const av=mhAct[i]||{};const ec=parseFloat(x.cost)||0;const ac=parseFloat(av.cost)||0;const v=ec-ac;return`<tr>
+      <td>${iRow(x.activity,`updateMhEst(${i},'activity',this.value)`)}</td>
+      <td>${iSel(ROLES,x.role,`updateMhEst(${i},'role',this.value)`)}</td>
+      <td><input class="inline-input" type="number" style="width:40px" value="${x.qty||''}" onchange="updateMhEst(${i},'qty',this.value)"></td>
+      <td><input class="inline-input" type="number" style="width:60px" value="${x.rate||''}" onchange="updateMhEst(${i},'rate',this.value)"></td>
+      <td><input class="inline-input" type="number" style="width:45px" step="0.1" value="${x.fte||''}" onchange="updateMhEst(${i},'fte',this.value)"></td>
+      <td style="font-size:12px">$${fmt(ec)}</td>
+      <td><input class="inline-input" type="number" style="width:80px" value="${av.cost||''}" onchange="updateMhAct(${i},'cost',this.value)"></td>
+      <td class="${v>=0?'text-green':'text-red'}" style="font-size:12px;font-weight:500">${v>=0?'+':''}$${fmt(v)}</td>
+      <td>${delBtn(`removeManhoursRow(${i})`)}</td>
+    </tr>`}).join('')||emptyTr(9,'No manhours data')}</tbody></table></div>
+  </div>`;
+}
+
+function renderProcurement(p) {
+  return `
+  <div class="section">
+    <div class="section-header">
+      <span class="section-title">Procurement items</span>
+      <div style="display:flex;gap:6px">
+        <button class="btn sm ai" onclick="openImportIntoProject('${p.id}','equipment')">
+          <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M6.5 1.5l1.2 3.7h3.8l-3 2.2 1.1 3.7-3.1-2.3-3.1 2.3 1.1-3.7-3-2.2h3.8z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/></svg>
+          Import
+        </button>
+        <button class="btn sm" onclick="addProcItem()">+ Add</button>
+      </div>
+    </div>
+    <div class="card table-wrap"><table><thead><tr>
+      <th>Item / description</th>
+      <th style="width:55px">Qty</th>
+      <th style="width:90px">Unit cost</th>
+      <th style="width:90px">Total</th>
+      <th style="width:105px">Required by</th>
+      <th style="width:105px">Order by</th>
+      <th style="width:65px">Lead (days)</th>
+      <th style="width:105px">PO created</th>
+      <th style="width:105px">Received</th>
+      <th style="width:105px">Delivered</th>
+      <th style="width:80px">Status</th>
+      <th style="width:36px"></th>
+    </tr></thead><tbody id="proc-body">${renderProcRows(p)}</tbody></table></div>
+  </div>`;
+}
+
+function renderProcRows(p) {
+  const items = p.procurement||[];
+  if(!items.length) return emptyTr(12,'No procurement items');
+  return items.map((x,i)=>{
+    const lead=parseInt(x.lead)||0;
+    const orderBy=x.requiredBy&&lead?calcOrderBy(x.requiredBy,lead):'';
+    const status=getProcStatus(x);
+    const total=(parseFloat(x.qty)||0)*(parseFloat(x.unitCost)||0);
+    const statusClass=status==='Delivered'?'done':status==='Received'?'active':status==='Ordered'?'scheduling':status==='Overdue'?'overdue':'pending';
+    return `<tr>
+      <td>${iRow(x.desc,`updateProc(${i},'desc',this.value)`)}</td>
+      <td><input class="inline-input" type="number" style="width:50px" value="${x.qty||''}" onchange="updateProc(${i},'qty',this.value);rerenderProc()"></td>
+      <td><input class="inline-input" type="number" style="width:85px" value="${x.unitCost||''}" onchange="updateProc(${i},'unitCost',this.value);rerenderProc()"></td>
+      <td style="font-size:12px">$${fmt(total)}</td>
+      <td>${iDate(x.requiredBy,`updateProc(${i},'requiredBy',this.value);rerenderProc()`)}</td>
+      <td class="order-by-cell">${orderBy||'—'}</td>
+      <td><input class="inline-input" type="number" style="width:60px" value="${x.lead||''}" onchange="updateProc(${i},'lead',this.value);rerenderProc()"></td>
+      <td>${iDate(x.poCreated,`updateProc(${i},'poCreated',this.value)`)}</td>
+      <td>${iDate(x.received,`updateProc(${i},'received',this.value)`)}</td>
+      <td>${iDate(x.delivered,`updateProc(${i},'delivered',this.value)`)}</td>
+      <td><span class="badge ${statusClass}">${status}</span></td>
+      <td>${delBtn(`removeProc(${i})`)}</td>
+    </tr>`;
+  }).join('');
+}
+
+function calcOrderBy(r,l) { const d=new Date(r);d.setDate(d.getDate()-parseInt(l));return d.toISOString().slice(0,10); }
+function getProcStatus(x) {
+  if(x.delivered) return 'Delivered';
+  if(x.received) return 'Received';
+  if(x.poCreated){ const ob=x.requiredBy&&x.lead?calcOrderBy(x.requiredBy,x.lead):null; if(ob&&today()>ob)return'Overdue'; return'Ordered'; }
+  return 'Pending';
+}
+function rerenderProc() { const p=getProject(state.activeProjectId);if(!p)return;const b=document.getElementById('proc-body');if(b)b.innerHTML=renderProcRows(p); }
+
+function renderIssues(p) {
+  const issues=p.issues||[];
+  return `
+  <div class="section">
+    <div class="section-header"><span class="section-title">Issue tracker</span><button class="btn sm" onclick="addIssue()">+ Add</button></div>
+    <div class="card table-wrap"><table><thead><tr><th style="width:28px">#</th><th style="width:105px">Date</th><th>Reported by</th><th>Machine(s)</th><th>Issue</th><th>Updates</th><th style="width:100px">Status</th><th style="width:36px"></th></tr></thead>
+    <tbody>${issues.map((x,i)=>{
+      const dotClass=x.status==='Closed'?'closed':x.status==='In progress'?'progress':'open';
+      return`<tr>
+        <td style="color:var(--text3);font-size:12px">${i+1}</td>
+        <td>${iDate(x.date,`updateIssue(${i},'date',this.value)`)}</td>
+        <td>${iRow(x.reportedBy,`updateIssue(${i},'reportedBy',this.value)`)}</td>
+        <td>${iRow(x.machines,`updateIssue(${i},'machines',this.value)`)}</td>
+        <td>${iRow(x.issue,`updateIssue(${i},'issue',this.value)`)}</td>
+        <td>${iRow(x.updates,`updateIssue(${i},'updates',this.value)`)}</td>
+        <td><div class="status-wrap"><div class="status-dot ${dotClass}"></div>${iSel(['Open','In progress','Closed'],x.status,`updateIssue(${i},'status',this.value)`)}</div></td>
+        <td>${delBtn(`removeIssue(${i})`)}</td>
+      </tr>`;}).join('')||emptyTr(8,'No issues logged')}</tbody></table></div>
+  </div>`;
+}
+
+function renderChange(p) {
+  return `
+  <div class="section">
+    <div class="section-header"><span class="section-title">Change log</span><button class="btn sm" onclick="addChange()">+ Add</button></div>
+    <div class="card table-wrap"><table><thead><tr><th style="width:28px">#</th><th style="width:105px">Date</th><th>Description</th><th>Impact</th><th>Approved by</th><th style="width:110px">Status</th><th style="width:36px"></th></tr></thead>
+    <tbody>${(p.changes||[]).map((x,i)=>`<tr>
+      <td style="color:var(--text3);font-size:12px">${i+1}</td>
+      <td>${iDate(x.date,`updateChange(${i},'date',this.value)`)}</td>
+      <td>${iRow(x.desc,`updateChange(${i},'desc',this.value)`)}</td>
+      <td>${iRow(x.impact,`updateChange(${i},'impact',this.value)`)}</td>
+      <td>${iRow(x.approvedBy,`updateChange(${i},'approvedBy',this.value)`)}</td>
+      <td>${iSel(['Pending','Approved','Rejected','Implemented'],x.status,`updateChange(${i},'status',this.value)`)}</td>
+      <td>${delBtn(`removeChange(${i})`)}</td>
+    </tr>`).join('')||emptyTr(7,'No changes logged')}</tbody></table></div>
+  </div>`;
+}
+
+function renderDocuments(p) {
+  const docs=p.documents||[];
+  const done=docs.filter(d=>d.submitted).length;
+  return `
+  <div class="metric-grid" style="grid-template-columns:repeat(3,1fr)">
+    <div class="metric"><div class="m-label">Required</div><div class="m-value">${docs.length}</div></div>
+    <div class="metric"><div class="m-label">Submitted</div><div class="m-value text-green">${done}</div></div>
+    <div class="metric"><div class="m-label">Pending</div><div class="m-value ${docs.length-done>0?'text-red':''}">${docs.length-done}</div></div>
+  </div>
+  <div class="section">
+    <div class="section-header"><span class="section-title">Required documents</span><button class="btn sm" onclick="addDocument()">+ Add</button></div>
+    <div class="card doc-list">
+      ${docs.length ? docs.map((d,i)=>`
+        <div class="doc-item">
+          <input type="checkbox" class="doc-checkbox" ${d.submitted?'checked':''} onchange="toggleDoc(${i},this.checked)">
+          <div class="doc-info">
+            <div class="doc-name ${d.submitted?'checked':''}">${esc(d.name||'—')}</div>
+            <div class="doc-meta">${d.phase?'Phase: '+PHASE_LABELS[d.phase]+' · ':''}${d.dueDate?'Due: '+d.dueDate+' · ':''}${d.submitted?'Submitted '+(d.submittedDate||'✓'):'Pending'}</div>
+          </div>
+          <div class="doc-actions">
+            ${d.submitted?`<input type="date" style="font-size:11px;padding:4px 7px;border:1px solid var(--border-md);border-radius:var(--radius-sm);background:var(--surface);color:var(--text);font-family:var(--sans)" value="${d.submittedDate||''}" onchange="updateDoc(${i},'submittedDate',this.value)">`:'' }
+            ${delBtn(`removeDoc(${i})`)}
+          </div>
+        </div>`).join('')
+      : `<div style="text-align:center;padding:32px;color:var(--text3);font-size:13px">No documents added yet. Click + Add to start tracking.</div>`}
+    </div>
+  </div>`;
+}
+
+function renderClosing(p) {
+  const cl=p.closing||{};
+  const totalDocs=(p.documents||[]).length;
+  const doneDocs=(p.documents||[]).filter(d=>d.submitted).length;
+  const openIssues=(p.issues||[]).filter(i=>i.status!=='Closed').length;
+  return `
+  <div class="metric-grid">
+    <div class="metric"><div class="m-label">Docs submitted</div><div class="m-value">${doneDocs}/${totalDocs}</div></div>
+    <div class="metric"><div class="m-label">Open issues</div><div class="m-value ${openIssues>0?'text-red':'text-green'}">${openIssues}</div></div>
+    <div class="metric"><div class="m-label">Status</div><div class="m-value" style="font-size:15px">${cl.status||'In progress'}</div></div>
+  </div>
+  <div class="section">
+    <div class="section-title" style="margin-bottom:12px">Closing details</div>
+    <div class="card" style="padding:16px">
+      <div class="form-grid">
+        <div class="field"><label>Closing status</label>
+          <select onchange="updateClosing('status',this.value)">
+            ${['In progress','Pending sign-off','Closed'].map(s=>`<option ${cl.status===s?'selected':''}>${s}</option>`).join('')}
+          </select>
+        </div>
+        <div class="field"><label>Sign-off date</label><input type="date" value="${cl.signOffDate||''}" onchange="updateClosing('signOffDate',this.value)"></div>
+        <div class="field full"><label>Lessons learned</label><textarea rows="4" onchange="updateClosing('lessonsLearned',this.value)">${esc(cl.lessonsLearned||'')}</textarea></div>
+        <div class="field full"><label>Closing notes</label><textarea rows="3" onchange="updateClosing('notes',this.value)">${esc(cl.notes||'')}</textarea></div>
+      </div>
+    </div>
+  </div>`;
+}
+
+// ─── Modal ────────────────────────────────────────────────────
+function showModal(html) {
+  document.getElementById('modal-inner').innerHTML = html;
+  document.getElementById('modal-bg').style.display = 'block';
+  document.getElementById('modal-wrap').style.display = 'flex';
+}
+function closeModal() {
+  document.getElementById('modal-bg').style.display = 'none';
+  document.getElementById('modal-wrap').style.display = 'none';
+}
+
+// ─── New Project ──────────────────────────────────────────────
+function openNewProjectModal() {
+  showModal(`
+    <div class="modal-header">
+      <h2>New project</h2>
+      <button class="icon-btn" onclick="closeModal()"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button>
+    </div>
+    <div class="form-grid">
+      <div class="field"><label>PO #</label><input id="m-po" placeholder="PO-2025-001"></div>
+      <div class="field"><label>Date</label><input id="m-date" type="date" value="${today()}"></div>
+      <div class="field full"><label>Project title *</label><input id="m-title" placeholder="Enter project title"></div>
+      <div class="field full"><label>Institution / Client</label><input id="m-inst"></div>
+      <div class="field"><label>Sales manager</label><input id="m-sm"></div>
+      <div class="field"><label>Sales revenue (SGD)</label><input id="m-rev" type="number"></div>
+      <div class="field full"><label>Overview</label><textarea id="m-overview" rows="3"></textarea></div>
+    </div>
+    <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:18px">
+      <button class="btn" onclick="closeModal()">Cancel</button>
+      <button class="btn primary" onclick="createProject()">Create project</button>
+    </div>`);
+}
+
+function createProject(prefill) {
+  const pf = prefill || {};
+  const title = (pf.title || document.getElementById('m-title')?.value || '').trim();
+  if (!title) { alert('Please enter a project title.'); return null; }
+  const p = {
+    id: newId(),
+    po: pf.po || document.getElementById('m-po')?.value || '',
+    date: pf.date || document.getElementById('m-date')?.value || today(),
+    title,
+    institution: pf.institution || document.getElementById('m-inst')?.value || '',
+    salesManager: pf.salesManager || document.getElementById('m-sm')?.value || '',
+    salesRevenue: parseFloat(pf.salesRevenue || document.getElementById('m-rev')?.value) || 0,
+    overview: pf.overview || document.getElementById('m-overview')?.value || '',
+    phase: 'request',
+    request: {
+      objectives: pf.objectives||'', background: pf.background||'',
+      businessCase: pf.businessCase||'', projectedSchedule: pf.projectedSchedule||'',
+      products: pf.products||[], milestones: pf.milestones||[],
+      kpis: pf.kpis||[], stakeholders: pf.stakeholders||[]
+    },
+    planning: { teamMembers:[], scope:[], risks:[] },
+    scheduling: { activities:[] },
+    tracking: { budgetItems:[], actualItems:[], manhoursEst:[], manhoursAct:[] },
+    procurement: pf.equipment||[],
+    issues: [], changes: [], documents: [],
+    closing: { status:'', notes:'', signOffDate:'', lessonsLearned:'' }
+  };
+  state.projects.push(p);
+  saveProjectNow(p);
+  return p;
+}
+
+// ─── Import Flow ──────────────────────────────────────────────
+let _importTargetId = null;
+let _importMode = 'all';
+
+function openImportModal() { _importTargetId=null; _importMode='all'; showImportUI(); }
+function openImportIntoProject(id, mode) { _importTargetId=id; _importMode=mode||'all'; showImportUI(); }
+
+function showImportUI() {
+  const modeLabel = _importMode==='equipment' ? 'equipment list' : 'project request + equipment';
+  showModal(`
+    <div class="modal-header">
+      <h2>Import from Word</h2>
+      <button class="icon-btn" onclick="closeModal()"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button>
+    </div>
+    <p style="font-size:13px;color:var(--text2);margin-bottom:16px">Upload your project request form (.docx) and AI will extract the ${modeLabel} fields automatically.</p>
+    <div class="upload-zone" id="upload-zone" onclick="document.getElementById('file-input').click()" ondragover="event.preventDefault();this.classList.add('drag')" ondragleave="this.classList.remove('drag')" ondrop="handleDrop(event)">
+      <svg width="32" height="32" viewBox="0 0 32 32" fill="none"><path d="M10 22l6-6 6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M16 16v10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M26 22.6A6 6 0 0022 12h-1.3a9 9 0 10-9.2 10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <p><strong>Click to upload</strong> or drag and drop</p>
+      <p class="uz-hint">.docx files only</p>
+    </div>
+    <input type="file" id="file-input" accept=".docx" style="display:none" onchange="handleFileSelect(this.files[0])">
+    <div id="import-status" style="margin-top:14px"></div>
+    <div style="display:flex;justify-content:flex-end;margin-top:16px">
+      <button class="btn" onclick="closeModal()">Cancel</button>
+    </div>`);
+}
+
+function handleDrop(e) {
+  e.preventDefault();
+  document.getElementById('upload-zone').classList.remove('drag');
+  const f = e.dataTransfer.files[0];
+  if (f) handleFileSelect(f);
+}
+
+function handleFileSelect(file) {
+  if (!file || !file.name.endsWith('.docx')) { alert('Please upload a .docx file.'); return; }
+  const sd = document.getElementById('import-status');
+  sd.innerHTML = `<div class="ai-banner"><div class="spinner"></div><div><strong>Reading document…</strong><br><span style="font-size:12px">Extracting text from ${esc(file.name)}</span></div></div>`;
+  const reader = new FileReader();
+  reader.onload = async(e) => {
+    const base64 = e.target.result.split(',')[1];
+    sd.innerHTML = `<div class="ai-banner"><div class="spinner"></div><div><strong>AI extracting fields…</strong><br><span style="font-size:12px">Analysing project request form</span></div></div>`;
+    try { await extractWithAI(base64); }
+    catch(err) { sd.innerHTML = `<div style="color:var(--red);font-size:13px;padding:10px;background:var(--red-bg);border-radius:var(--radius)">Error: ${esc(err.message)}</div>`; }
+  };
+  reader.readAsDataURL(file);
+}
+
+async function extractWithAI(base64) {
+  const isEquipOnly = _importMode === 'equipment';
+  const prompt = isEquipOnly
+    ? `Extract ALL equipment, products, and line items from this project request Word document. For each item extract: desc (description), qty (quantity as string), unitCost (unit cost as string, leave blank if not found), remarks. Return ONLY valid JSON: {"equipment":[{"desc":"","qty":"","unitCost":"","remarks":""}]}`
+    : `Extract all structured data from this project request form Word document. Return ONLY valid JSON in this exact format (use empty strings/arrays if not found):
+{"po":"","date":"","title":"","institution":"","salesManager":"","salesRevenue":"","background":"","objectives":"","businessCase":"","projectedSchedule":"","products":[{"desc":"","qty":"","remarks":""}],"milestones":[{"desc":"","date":"","remarks":""}],"kpis":[{"desc":"","method":"","threshold":""}],"stakeholders":[{"inst":"","role":"","names":""}],"equipment":[{"desc":"","qty":"","unitCost":"","remarks":""}]}
+For date fields use YYYY-MM-DD. For salesRevenue extract only the number.`;
+
+  const resp = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-20250514', max_tokens: 2000,
+      messages: [{ role: 'user', content: [
+        { type: 'document', source: { type: 'base64', media_type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', data: base64 } },
+        { type: 'text', text: prompt }
+      ]}]
+    })
+  });
+  if (!resp.ok) { const e=await resp.json().catch(()=>({})); throw new Error(e.error?.message||'API request failed'); }
+  const data = await resp.json();
+  const text = data.content.map(c=>c.text||'').join('');
+  let extracted;
+  try { extracted = JSON.parse(text.replace(/```json|```/g,'').trim()); }
+  catch(e) { throw new Error('Could not parse AI response. Please try again.'); }
+  showPreview(extracted);
+}
+
+function showPreview(extracted) {
+  const isEquipOnly = _importMode === 'equipment';
+  const sd = document.getElementById('import-status');
+  if (!sd) return;
+  const eq = extracted.equipment||[];
+
+  if (isEquipOnly) {
+    const rows = eq.map(e=>`<tr><td style="font-size:12px">${esc(e.desc||'')}</td><td style="font-size:12px">${esc(e.qty||'')}</td><td style="font-size:12px">${e.unitCost?'$'+esc(e.unitCost):''}</td></tr>`).join('');
+    const enc = encodeURIComponent(JSON.stringify(eq));
+    sd.innerHTML = `
+      <div style="background:var(--purple-bg);border-radius:var(--radius);padding:10px 12px;margin-bottom:12px;font-size:13px;color:var(--purple)">
+        <strong>Found ${eq.length} equipment item${eq.length!==1?'s':''}</strong>
+      </div>
+      <div class="card table-wrap" style="max-height:180px;overflow-y:auto;margin-bottom:12px">
+        <table><thead><tr><th>Description</th><th>Qty</th><th>Unit cost</th></tr></thead>
+        <tbody>${rows||emptyTr(3,'No equipment found')}</tbody></table>
+      </div>
+      <div style="display:flex;justify-content:flex-end;gap:8px">
+        <button class="btn" onclick="closeModal()">Cancel</button>
+        <button class="btn primary" onclick="applyEquipment(decodeURIComponent('${enc}'))">Add ${eq.length} items to procurement</button>
+      </div>`;
+    return;
+  }
+
+  const fields = [
+    {l:'Project title',v:extracted.title},{l:'PO #',v:extracted.po},
+    {l:'Institution',v:extracted.institution},{l:'Date',v:extracted.date},
+    {l:'Sales manager',v:extracted.salesManager},{l:'Sales revenue',v:extracted.salesRevenue},
+    {l:'Background',v:extracted.background?extracted.background.slice(0,80)+'…':''},
+    {l:'Objectives',v:extracted.objectives?extracted.objectives.slice(0,80)+'…':''},
+    {l:'Products',v:(extracted.products||[]).length+' items'},{l:'Milestones',v:(extracted.milestones||[]).length+' items'},
+    {l:'Stakeholders',v:(extracted.stakeholders||[]).length+' items'},{l:'Equipment',v:eq.length+' items'}
+  ];
+
+  const fieldHtml = fields.map(f=>`<div class="fp-item"><div class="fp-label">${esc(f.l)}</div><div class="fp-value ${!f.v||f.v==='0 items'?'empty':''}">${f.v||'Not found'}</div></div>`).join('');
+  const enc = encodeURIComponent(JSON.stringify(extracted));
+
+  sd.innerHTML = `
+    <div class="ai-banner" style="margin-bottom:12px">
+      <svg width="18" height="18" viewBox="0 0 18 18" fill="none" style="flex-shrink:0"><path d="M3 9l5 5 8-8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <div><strong>Extraction complete</strong> — review below</div>
+    </div>
+    <div class="fp-grid">${fieldHtml}</div>
+    ${_importTargetId ? `
+      <div style="font-size:13px;font-weight:500;margin-bottom:8px">Apply to project:</div>
+      <div class="card" style="padding:10px 14px;margin-bottom:14px">
+        <div class="check-row"><input type="checkbox" id="a-info" checked><label for="a-info">Project info (title, PO, institution, descriptions)</label></div>
+        <div class="check-row"><input type="checkbox" id="a-products" checked><label for="a-products">Products / deliverables (${(extracted.products||[]).length} items)</label></div>
+        <div class="check-row"><input type="checkbox" id="a-milestones" checked><label for="a-milestones">Milestones (${(extracted.milestones||[]).length} items)</label></div>
+        <div class="check-row"><input type="checkbox" id="a-kpis" checked><label for="a-kpis">KPIs (${(extracted.kpis||[]).length} items)</label></div>
+        <div class="check-row"><input type="checkbox" id="a-stakeholders" checked><label for="a-stakeholders">Stakeholders (${(extracted.stakeholders||[]).length} items)</label></div>
+        <div class="check-row"><input type="checkbox" id="a-equipment" ${eq.length?'checked':''}><label for="a-equipment">Equipment → Procurement (${eq.length} items)</label></div>
+      </div>
+      <div style="display:flex;justify-content:flex-end;gap:8px">
+        <button class="btn" onclick="closeModal()">Cancel</button>
+        <button class="btn primary" onclick="mergeIntoProject(decodeURIComponent('${enc}'))">Apply to project</button>
+      </div>` :
+    `<div style="display:flex;justify-content:flex-end;gap:8px">
+        <button class="btn" onclick="closeModal()">Cancel</button>
+        <button class="btn primary" onclick="createFromExtracted(decodeURIComponent('${enc}'))">Create new project</button>
+      </div>`}`;
+}
+
+function createFromExtracted(encodedData) {
+  let x; try { x=JSON.parse(encodedData); } catch(e){return;}
+  const pf = {
+    po:x.po||'', date:x.date||today(), title:x.title||'Imported project',
+    institution:x.institution||'', salesManager:x.salesManager||'', salesRevenue:x.salesRevenue||0,
+    background:x.background||'', objectives:x.objectives||'', businessCase:x.businessCase||'', projectedSchedule:x.projectedSchedule||'',
+    products:(x.products||[]).filter(i=>i.desc),
+    milestones:(x.milestones||[]).filter(i=>i.desc),
+    kpis:(x.kpis||[]).filter(i=>i.desc),
+    stakeholders:(x.stakeholders||[]).filter(i=>i.inst||i.names),
+    equipment:(x.equipment||[]).filter(i=>i.desc).map(e=>({desc:e.desc,qty:e.qty||'',unitCost:e.unitCost||'',lead:'',requiredBy:'',poCreated:'',received:'',delivered:''}))
+  };
+  const p = createProject(pf);
+  if (!p) return;
+  closeModal(); openProject(p.id);
+}
+
+function mergeIntoProject(encodedData) {
+  let x; try { x=JSON.parse(encodedData); } catch(e){return;}
+  const p = getProject(_importTargetId); if(!p) return;
+  if (document.getElementById('a-info')?.checked) {
+    if(x.po)p.po=x.po; if(x.date)p.date=x.date; if(x.title)p.title=x.title;
+    if(x.institution)p.institution=x.institution; if(x.salesManager)p.salesManager=x.salesManager;
+    if(x.salesRevenue)p.salesRevenue=parseFloat(x.salesRevenue)||0;
+    if(x.background)p.request.background=x.background;
+    if(x.objectives)p.request.objectives=x.objectives;
+    if(x.businessCase)p.request.businessCase=x.businessCase;
+    if(x.projectedSchedule)p.request.projectedSchedule=x.projectedSchedule;
+  }
+  if (document.getElementById('a-products')?.checked && (x.products||[]).length)
+    p.request.products=[...(p.request.products||[]),...x.products.filter(i=>i.desc)];
+  if (document.getElementById('a-milestones')?.checked && (x.milestones||[]).length)
+    p.request.milestones=[...(p.request.milestones||[]),...x.milestones.filter(i=>i.desc)];
+  if (document.getElementById('a-kpis')?.checked && (x.kpis||[]).length)
+    p.request.kpis=[...(p.request.kpis||[]),...x.kpis.filter(i=>i.desc)];
+  if (document.getElementById('a-stakeholders')?.checked && (x.stakeholders||[]).length)
+    p.request.stakeholders=[...(p.request.stakeholders||[]),...x.stakeholders.filter(i=>i.inst||i.names)];
+  if (document.getElementById('a-equipment')?.checked && (x.equipment||[]).length) {
+    const ni=(x.equipment||[]).filter(i=>i.desc).map(e=>({desc:e.desc,qty:e.qty||'',unitCost:e.unitCost||'',lead:'',requiredBy:'',poCreated:'',received:'',delivered:''}));
+    p.procurement=[...(p.procurement||[]),...ni];
+  }
+  saveState(); closeModal();
+  state.activeTab = document.getElementById('a-equipment')?.checked && !document.getElementById('a-info')?.checked ? 'procurement' : 'request';
+  renderProjectView();
+}
+
+function applyEquipment(encodedData) {
+  let eq; try { eq=JSON.parse(encodedData); } catch(e){return;}
+  const p=getProject(_importTargetId); if(!p) return;
+  const ni=eq.filter(i=>i.desc).map(e=>({desc:e.desc,qty:e.qty||'',unitCost:e.unitCost||'',lead:'',requiredBy:'',poCreated:'',received:'',delivered:''}));
+  p.procurement=[...(p.procurement||[]),...ni];
+  saveState(); closeModal(); state.activeTab='procurement'; renderProjectView();
+}
+
+// ─── Document Modal ───────────────────────────────────────────
+function addDocument() {
+  showModal(`
+    <div class="modal-header">
+      <h2>Add required document</h2>
+      <button class="icon-btn" onclick="closeModal()"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button>
+    </div>
+    <div class="form-grid">
+      <div class="field full"><label>Document name *</label><input id="md-name" placeholder="e.g. Test Plan (SIT/UAT)"></div>
+      <div class="field"><label>Required at phase</label>
+        <select id="md-phase">${PHASES.map(ph=>`<option value="${ph}">${PHASE_LABELS[ph]}</option>`).join('')}</select>
+      </div>
+      <div class="field"><label>Due date</label><input id="md-due" type="date"></div>
+      <div class="field full"><label>Notes</label><input id="md-notes" placeholder="Optional notes..."></div>
+    </div>
+    <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:18px">
+      <button class="btn" onclick="closeModal()">Cancel</button>
+      <button class="btn primary" onclick="saveDoc()">Add document</button>
+    </div>`);
+}
+
+function saveDoc() {
+  const name = document.getElementById('md-name').value.trim();
+  if (!name) { alert('Please enter a document name.'); return; }
+  const p = getProject(state.activeProjectId); if (!p) return;
+  p.documents.push({ id:newId(), name, phase:document.getElementById('md-phase').value, dueDate:document.getElementById('md-due').value, notes:document.getElementById('md-notes').value.trim(), submitted:false, submittedDate:'' });
+  saveState(); closeModal(); renderTab();
+}
+
+// ─── Data mutation helpers ────────────────────────────────────
+function setField(f,v){const p=getProject(state.activeProjectId);if(!p)return;p[f]=v;saveState();}
+function setReqField(f,v){const p=getProject(state.activeProjectId);if(!p)return;p.request[f]=v;saveState();}
+
+function addProduct(){const p=getProject(state.activeProjectId);if(!p)return;p.request.products.push({desc:'',qty:'',remarks:''});saveState();const b=document.getElementById('products-body');if(b)b.innerHTML=renderProductsRows(p);}
+function updateProduct(i,f,v){const p=getProject(state.activeProjectId);if(!p)return;p.request.products[i][f]=v;saveState();}
+function removeProduct(i){const p=getProject(state.activeProjectId);if(!p)return;p.request.products.splice(i,1);saveState();const b=document.getElementById('products-body');if(b)b.innerHTML=renderProductsRows(p);}
+
+function addMilestone(){const p=getProject(state.activeProjectId);if(!p)return;p.request.milestones.push({desc:'',date:'',remarks:''});saveState();const b=document.getElementById('milestones-body');if(b)b.innerHTML=renderMilestonesRows(p);}
+function updateMilestone(i,f,v){const p=getProject(state.activeProjectId);if(!p)return;p.request.milestones[i][f]=v;saveState();}
+function removeMilestone(i){const p=getProject(state.activeProjectId);if(!p)return;p.request.milestones.splice(i,1);saveState();const b=document.getElementById('milestones-body');if(b)b.innerHTML=renderMilestonesRows(p);}
+
+function addKpi(){const p=getProject(state.activeProjectId);if(!p)return;p.request.kpis.push({desc:'',method:'',threshold:''});saveState();const b=document.getElementById('kpis-body');if(b)b.innerHTML=renderKpisRows(p);}
+function updateKpi(i,f,v){const p=getProject(state.activeProjectId);if(!p)return;p.request.kpis[i][f]=v;saveState();}
+function removeKpi(i){const p=getProject(state.activeProjectId);if(!p)return;p.request.kpis.splice(i,1);saveState();const b=document.getElementById('kpis-body');if(b)b.innerHTML=renderKpisRows(p);}
+
+function addStakeholder(){const p=getProject(state.activeProjectId);if(!p)return;p.request.stakeholders.push({inst:'',role:'',names:''});saveState();const b=document.getElementById('stakeholders-body');if(b)b.innerHTML=renderStakeholderRows(p);}
+function updateStakeholder(i,f,v){const p=getProject(state.activeProjectId);if(!p)return;p.request.stakeholders[i][f]=v;saveState();}
+function removeStakeholder(i){const p=getProject(state.activeProjectId);if(!p)return;p.request.stakeholders.splice(i,1);saveState();const b=document.getElementById('stakeholders-body');if(b)b.innerHTML=renderStakeholderRows(p);}
+
+function addTeamMember(){const p=getProject(state.activeProjectId);if(!p)return;p.planning.teamMembers.push({role:'Project Manager',name:'',remarks:''});saveState();renderTab();}
+function updateTeamMember(i,f,v){const p=getProject(state.activeProjectId);if(!p)return;p.planning.teamMembers[i][f]=v;saveState();}
+function removeTeamMember(i){const p=getProject(state.activeProjectId);if(!p)return;p.planning.teamMembers.splice(i,1);saveState();renderTab();}
+
+function addScopeItem(){const p=getProject(state.activeProjectId);if(!p)return;p.planning.scope.push({inout:'In',desc:'',remarks:''});saveState();renderTab();}
+function updateScope(i,f,v){const p=getProject(state.activeProjectId);if(!p)return;p.planning.scope[i][f]=v;saveState();}
+function removeScope(i){const p=getProject(state.activeProjectId);if(!p)return;p.planning.scope.splice(i,1);saveState();renderTab();}
+
+function addRisk(){const p=getProject(state.activeProjectId);if(!p)return;p.planning.risks.push({type:'Technical',risk:'',mitigation:''});saveState();renderTab();}
+function updateRisk(i,f,v){const p=getProject(state.activeProjectId);if(!p)return;p.planning.risks[i][f]=v;saveState();}
+function removeRisk(i){const p=getProject(state.activeProjectId);if(!p)return;p.planning.risks.splice(i,1);saveState();renderTab();}
+
+function addActivity(){const p=getProject(state.activeProjectId);if(!p)return;p.scheduling.activities.push({name:'',start:'',end:'',status:'Not started'});saveState();renderTab();}
+function updateActivity(i,f,v){const p=getProject(state.activeProjectId);if(!p)return;p.scheduling.activities[i][f]=v;saveState();}
+function removeActivity(i){const p=getProject(state.activeProjectId);if(!p)return;p.scheduling.activities.splice(i,1);saveState();renderTab();}
+
+function addBudgetItem(){const p=getProject(state.activeProjectId);if(!p)return;p.tracking.budgetItems.push({item:'',budgeted:''});p.tracking.actualItems.push({actual:''});saveState();renderTab();}
+function updateBudgetItem(i,f,v){const p=getProject(state.activeProjectId);if(!p)return;p.tracking.budgetItems[i][f]=v;saveState();}
+function updateBudgetActual(i,v){const p=getProject(state.activeProjectId);if(!p)return;while(p.tracking.actualItems.length<=i)p.tracking.actualItems.push({actual:''});p.tracking.actualItems[i].actual=v;saveState();}
+function removeBudgetItem(i){const p=getProject(state.activeProjectId);if(!p)return;p.tracking.budgetItems.splice(i,1);p.tracking.actualItems.splice(i,1);saveState();renderTab();}
+
+function addManhoursRow(){const p=getProject(state.activeProjectId);if(!p)return;p.tracking.manhoursEst.push({activity:'',role:'Project Manager',qty:'1',rate:'520',fte:'',cost:''});p.tracking.manhoursAct.push({cost:''});saveState();renderTab();}
+function updateMhEst(i,f,v){const p=getProject(state.activeProjectId);if(!p)return;p.tracking.manhoursEst[i][f]=v;const r=p.tracking.manhoursEst[i];r.cost=((parseFloat(r.qty)||0)*(parseFloat(r.rate)||0)*(parseFloat(r.fte)||0)).toFixed(0);saveState();renderTab();}
+function updateMhAct(i,f,v){const p=getProject(state.activeProjectId);if(!p)return;while(p.tracking.manhoursAct.length<=i)p.tracking.manhoursAct.push({cost:''});p.tracking.manhoursAct[i][f]=v;saveState();renderTab();}
+function removeManhoursRow(i){const p=getProject(state.activeProjectId);if(!p)return;p.tracking.manhoursEst.splice(i,1);p.tracking.manhoursAct.splice(i,1);saveState();renderTab();}
+
+function addProcItem(){const p=getProject(state.activeProjectId);if(!p)return;p.procurement.push({desc:'',qty:'',unitCost:'',requiredBy:'',lead:'',poCreated:'',received:'',delivered:''});saveState();rerenderProc();}
+function updateProc(i,f,v){const p=getProject(state.activeProjectId);if(!p)return;p.procurement[i][f]=v;saveState();}
+function removeProc(i){const p=getProject(state.activeProjectId);if(!p)return;p.procurement.splice(i,1);saveState();rerenderProc();}
+
+function addIssue(){const p=getProject(state.activeProjectId);if(!p)return;p.issues.push({date:today(),reportedBy:'',machines:'',issue:'',updates:'',status:'Open'});saveState();renderTab();}
+function updateIssue(i,f,v){const p=getProject(state.activeProjectId);if(!p)return;p.issues[i][f]=v;saveState();}
+function removeIssue(i){const p=getProject(state.activeProjectId);if(!p)return;p.issues.splice(i,1);saveState();renderTab();}
+
+function addChange(){const p=getProject(state.activeProjectId);if(!p)return;p.changes.push({date:today(),desc:'',impact:'',approvedBy:'',status:'Pending'});saveState();renderTab();}
+function updateChange(i,f,v){const p=getProject(state.activeProjectId);if(!p)return;p.changes[i][f]=v;saveState();}
+function removeChange(i){const p=getProject(state.activeProjectId);if(!p)return;p.changes.splice(i,1);saveState();renderTab();}
+
+function toggleDoc(i,checked){const p=getProject(state.activeProjectId);if(!p)return;p.documents[i].submitted=checked;if(checked&&!p.documents[i].submittedDate)p.documents[i].submittedDate=today();saveState();renderTab();}
+function updateDoc(i,f,v){const p=getProject(state.activeProjectId);if(!p)return;p.documents[i][f]=v;saveState();}
+function removeDoc(i){const p=getProject(state.activeProjectId);if(!p)return;p.documents.splice(i,1);saveState();renderTab();}
+function updateClosing(f,v){const p=getProject(state.activeProjectId);if(!p)return;p.closing[f]=v;saveState();}
+
+// ─── Resize handler ───────────────────────────────────────────
+let _resizeTimer;
+window.addEventListener('resize', () => {
+  clearTimeout(_resizeTimer);
+  _resizeTimer = setTimeout(() => {
+    if (state.activeProjectId) renderProjectView();
+  }, 200);
+});
+
+// ─── Boot ─────────────────────────────────────────────────────
+loadState().catch(console.error);
+
+</script>
+</body>
+</html>
