@@ -1,0 +1,17 @@
+{
+  "name": "ProjectFlow",
+  "short_name": "ProjectFlow",
+  "description": "Multi-project management tracker",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#f7f7f5",
+  "theme_color": "#1a1916",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
