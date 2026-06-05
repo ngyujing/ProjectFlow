@@ -629,9 +629,10 @@ function saveUIState() {
 }
 
 const _saveTimers = new Map();
-function saveState() {
+function saveState(projectId) {
   saveUIState();
-  const p = getProject(state.activeProjectId);
+  const pid = projectId || state.activeProjectId;
+  const p = getProject(pid);
   if (!p) return;
   if (_saveTimers.has(p.id)) clearTimeout(_saveTimers.get(p.id));
   _saveTimers.set(p.id, setTimeout(() => {
@@ -1237,8 +1238,13 @@ function openNewProjectModal() {
     </div>
     <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:18px">
       <button class="btn" onclick="closeModal()">Cancel</button>
-      <button class="btn primary" onclick="createProject()">Create project</button>
+      <button class="btn primary" onclick="handleCreateProject()">Create project</button>
     </div>`);
+}
+
+function handleCreateProject() {
+  const p = createProject();
+  if (p) { closeModal(); openProject(p.id); }
 }
 
 function createProject(prefill) {
@@ -1310,15 +1316,7 @@ function handleDrop(e) {
 function handleFileSelect(file) {
   if (!file || !file.name.endsWith('.docx')) { alert('Please upload a .docx file.'); return; }
   const sd = document.getElementById('import-status');
-  sd.innerHTML = `<div class="ai-banner"><div class="spinner"></div><div><strong>Reading document…</strong><br><span style="font-size:12px">Extracting text from ${esc(file.name)}</span></div></div>`;
-  const reader = new FileReader();
-  reader.onload = async(e) => {
-    const base64 = e.target.result.split(',')[1];
-    sd.innerHTML = `<div class="ai-banner"><div class="spinner"></div><div><strong>AI extracting fields…</strong><br><span style="font-size:12px">Analysing project request form</span></div></div>`;
-    try { await extractWithAI(base64); }
-    catch(err) { sd.innerHTML = `<div style="color:var(--red);font-size:13px;padding:10px;background:var(--red-bg);border-radius:var(--radius)">Error: ${esc(err.message)}</div>`; }
-  };
-  reader.readAsDataURL(file);
+  sd.innerHTML = `<div style="color:var(--amber);font-size:13px;padding:10px;background:var(--amber-bg);border-radius:var(--radius)">AI-powered Word import is not yet configured. Please create projects manually for now.</div>`;
 }
 
 async function extractWithAI(base64) {
@@ -1453,7 +1451,7 @@ function mergeIntoProject(encodedData) {
     const ni=(x.equipment||[]).filter(i=>i.desc).map(e=>({desc:e.desc,qty:e.qty||'',unitCost:e.unitCost||'',lead:'',requiredBy:'',poCreated:'',received:'',delivered:''}));
     p.procurement=[...(p.procurement||[]),...ni];
   }
-  saveState(); closeModal();
+  saveProjectNow(p); closeModal();
   state.activeTab = document.getElementById('a-equipment')?.checked && !document.getElementById('a-info')?.checked ? 'procurement' : 'request';
   renderProjectView();
 }
@@ -1463,7 +1461,7 @@ function applyEquipment(encodedData) {
   const p=getProject(_importTargetId); if(!p) return;
   const ni=eq.filter(i=>i.desc).map(e=>({desc:e.desc,qty:e.qty||'',unitCost:e.unitCost||'',lead:'',requiredBy:'',poCreated:'',received:'',delivered:''}));
   p.procurement=[...(p.procurement||[]),...ni];
-  saveState(); closeModal(); state.activeTab='procurement'; renderProjectView();
+  saveProjectNow(p); closeModal(); state.activeTab='procurement'; renderProjectView();
 }
 
 // ─── Document Modal ───────────────────────────────────────────
